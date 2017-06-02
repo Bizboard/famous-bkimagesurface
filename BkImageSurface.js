@@ -22,6 +22,7 @@ define(function(require, exports, module) {
 
     // import dependencies
     var Surface = require('famous/core/Surface');
+    var DOMBuffer = require('famous/core/DOMBuffer');
 
     /**
      * @enum
@@ -97,9 +98,12 @@ define(function(require, exports, module) {
         var props = this.getProperties();
         if (this._imageUrl) {
             var imageUrl = this._imageUrl;
-            // replace single quotes to prevent string conflicts in css
-            imageUrl.replace(/'/g, '"');
-            props.backgroundImage = 'url(\'' + imageUrl + '\')';
+            // url encode '(' and ')'
+            if ((imageUrl.indexOf('(') >= 0) || (imageUrl.indexOf(')') >= 0)) {
+                imageUrl = imageUrl.split('(').join('%28');
+                imageUrl = imageUrl.split(')').join('%29');
+            }
+            props.backgroundImage = 'url(' + imageUrl + ')';
         }
         else {
             props.backgroundImage = '';
@@ -180,11 +184,12 @@ define(function(require, exports, module) {
      * @param {Node} target document parent of this container
      */
     BkImageSurface.prototype.deploy = function deploy(target) {
-        target.innerHTML = '';
+        DOMBuffer.assignProperty(target, 'innerHTML', '');
         if (this._imageUrl) {
-            target.style.backgroundImage = 'url(' + this._imageUrl + ')';
+            DOMBuffer.assignProperty(target.style, 'backgroundImage', 'url(' + this._imageUrl + ')');
         }
     };
+
 
     /**
      * Remove this component and contained content from the document
@@ -196,7 +201,7 @@ define(function(require, exports, module) {
      * @param {Node} target node to which the component was deployed
      */
     BkImageSurface.prototype.recall = function recall(target) {
-        target.style.backgroundImage = '';
+        DOMBuffer.assignProperty(target.style, 'backgroundImage', '');
     };
 
     module.exports = BkImageSurface;
